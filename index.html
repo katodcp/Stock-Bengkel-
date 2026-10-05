@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stokku — Inventory</title>
+<style>
+:root{--bg:#0e0f11;--s1:#15171a;--s2:#1c1f23;--bd:#2a2e33;--tx:#e8eaed;--mut:#8b929a;--ok:#4ade80;--warn:#facc15;--bad:#f87171;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*,*:before,*:after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+[hidden]{display:none!important}
+#side{position:fixed;inset:0 auto 0 0;width:216px;background:var(--s1);border-right:1px solid var(--bd);padding:18px 12px;display:flex;flex-direction:column;gap:2px;z-index:20;transition:transform .2s}
+#side h1{font-size:16px;margin:0 8px 16px;letter-spacing:.3px}
+#side a{color:var(--mut);text-decoration:none;padding:8px 10px;border-radius:8px;transition:.15s}
+#side a:hover{background:var(--s2);color:var(--tx)}#side a.on{background:var(--s2);color:var(--tx)}
+main{margin-left:216px;padding:28px 32px 48px;max-width:1280px}
+#burger{display:none;position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:12px;z-index:30}
+h2{font-size:20px;margin:0 0 4px;font-weight:600}.sub{color:var(--mut);margin:0 0 20px}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:16px}.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.k{color:var(--mut);font-size:12px}.v{font-size:22px;font-weight:600;margin-top:2px}
+.btn{background:var(--s2);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:7px 12px;font:inherit;cursor:pointer;transition:.15s}
+.btn:hover{border-color:#444a52}.btn:disabled{opacity:.5}.btn.p{background:var(--tx);color:#111;border-color:var(--tx)}.btn.d{color:var(--bad)}.btn.s{padding:3px 8px;font-size:12px}
+input,select,textarea{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:7px 10px;font:inherit;width:100%;min-width:0}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#5b626b}
+label{display:block;font-size:12px;color:var(--mut)}label>*{margin-top:4px}label.ck{display:flex;gap:8px;align-items:center}label.ck input{width:auto;margin:0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.end{justify-content:flex-end;margin:14px 0 0}.row>*{flex:0 1 auto}.row input,.row select{width:auto}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.f2 .w{grid-column:1/-1}
+.tw{overflow-x:auto;border:1px solid var(--bd);border-radius:12px;background:var(--s1)}
+table{width:100%;border-collapse:collapse}th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--bd);white-space:nowrap}th{color:var(--mut);font-weight:500;font-size:12px}tr:last-child td{border:0}tbody tr:hover{background:var(--s2)}
+.th{width:36px;height:36px;border-radius:8px;object-fit:cover;background:var(--s2);display:block}.big{width:100%;height:180px;border-radius:10px;object-fit:cover}
+.b{padding:2px 8px;border-radius:99px;font-size:12px;border:1px solid}.b.ok{color:var(--ok);border-color:#1f5c37}.b.warn{color:var(--warn);border-color:#6b5a0c}.b.bad{color:var(--bad);border-color:#6b2a2a}.b.n{color:var(--mut);border-color:var(--bd)}
+.empty{padding:36px;text-align:center;color:var(--mut)}.sk{height:80px;border-radius:12px;background:linear-gradient(90deg,var(--s1),var(--s2),var(--s1));background-size:200%;animation:sh 1.2s infinite}@keyframes sh{to{background-position:-200% 0}}
+#ov,#dlg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}#dlg{z-index:60}
+.modal{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:20px;width:560px;max-width:100%;max-height:92vh;overflow:auto;animation:pop .15s}.modal.sm{width:400px}@keyframes pop{from{opacity:0;transform:scale(.97)}}
+.modal h3{margin:0 0 14px}
+#toast{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:70}
+.t{background:var(--s2);border:1px solid var(--bd);border-left:3px solid var(--ok);padding:10px 14px;border-radius:8px;animation:pop .2s;max-width:320px}.t.bad{border-left-color:var(--bad)}.t.warn{border-left-color:var(--warn)}
+.log{display:flex;gap:12px;padding:10px 4px;border-bottom:1px solid var(--bd)}.log:last-child{border:0}.log time{color:var(--mut);min-width:140px;font-size:12px}
+.pg{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:10px;color:var(--mut)}
+@media(max-width:860px){#side{transform:translateX(-100%)}#side.open{transform:none}main{margin-left:0;padding:60px 14px 32px}#burger{display:block}.g2{grid-template-columns:1fr}}
+</style></head><body>
+<button class="btn" id="burger" data-a="burger" aria-label="Menu">☰</button>
+<nav id="side"><h1>📦 Stokku</h1></nav>
+<main id="pg"><div class="grid"><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div></div></main>
+<div id="ov" hidden></div><div id="dlg" hidden></div><div id="toast"></div>
+<script>
+const SCHEMA=1,DATA=['products','tx','expenses','tools','logs'],STORES=[...DATA,'settings'];
+const S={products:[],tx:[],expenses:[],tools:[],logs:[],set:{id:'app',schema:SCHEMA,minStock:5,currency:'IDR'}};
+const ST={f:{q:'',cat:'',st:'',sort:'name',page:1},ef:{from:'',to:'',cat:''},lf:'',fid:{in:null,out:null},m:null,imp:null};
+const $=(s,r=document)=>r.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>(crypto.randomUUID&&crypto.randomUUID())||Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+const CUR={IDR:['Rp','id-ID'],USD:['$','en-US'],EUR:['€','de-DE']};
+const rp=n=>{const[s,l]=CUR[S.set.currency]||CUR.IDR;return s+Number(n||0).toLocaleString(l,{maximumFractionDigits:S.set.currency==='IDR'?0:2})};
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const dt=t=>new Date(t).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'}),dd=s=>s?new Date(s+'T00:00').toLocaleDateString('id-ID',{dateStyle:'medium'}):'-';
+const r3=x=>Math.round(x*1000)/1000,sum=(a,f)=>a.reduce((s,x)=>s+f(x),0);
+const FB='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="#1c1f23"/><path d="M20 9l9 5v12l-9 5-9-5V14z M11 14l9 5 9-5 M20 19v12" fill="none" stroke="#5b626b" stroke-width="1.5"/></svg>');
+// ---------- database ----------
+let db;
+const openDB=()=>new Promise((res,rej)=>{const r=indexedDB.open('stokku',SCHEMA);r.onupgradeneeded=()=>{const d=r.result;STORES.forEach(s=>{if(!d.objectStoreNames.contains(s))d.createObjectStore(s,{keyPath:'id'})})/* migrasi versi berikutnya ditambah di sini berdasarkan e.oldVersion */};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);r.onblocked=()=>rej(new Error('Database terblokir, tutup tab lain'))});
+const openSafe=async()=>{if(!window.indexedDB)throw new Error('Browser ini tidak mendukung penyimpanan lokal (IndexedDB)');let last;for(let i=0;i<2;i++){try{return await Promise.race([openDB(),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Database tidak merespons (timeout)')),6000))])}catch(e){last=e}}throw last};
+const req=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const run=(names,mode,fn)=>new Promise((res,rej)=>{let out,err;const t=db.transaction(names,mode);t.oncomplete=()=>res(out);t.onabort=t.onerror=()=>rej(err||t.error||new Error('Gagal menyimpan data'));Promise.resolve().then(()=>fn(t)).then(v=>out=v).catch(e=>{err=e;try{t.abort()}catch{}})});
+async function load(){await run(STORES,'readonly',async t=>{for(const k of DATA)S[k]=await req(t.objectStore(k).getAll());const s=await req(t.objectStore('settings').get('app'));if(s)S.set={...S.set,...s}})}
+const lg=(t,ty,x)=>t.objectStore('logs').add({id:uid(),ts:Date.now(),type:ty,text:x});
+let busy=false;const once=async fn=>{if(busy)return;busy=true;try{await fn()}catch(e){console.error(e);toast(e.message||'Terjadi kesalahan','bad')}finally{busy=false}};
+// ---------- util UI ----------
+function toast(m,k=''){const d=document.createElement('div');d.className='t '+k;d.textContent=m;$('#toast').append(d);setTimeout(()=>d.remove(),3500)}
+function modal(h){const o=$('#ov');o.innerHTML=`<div class="modal">${h}</div>`;o.hidden=false;const i=$('input:not([type=file]),select',o);i&&i.focus()}
+const closeM=()=>{$('#ov').hidden=true;$('#ov').innerHTML=''};
+function ask(msg,ok='Hapus',inp){return new Promise(r=>{const d=$('#dlg');d.hidden=false;d.innerHTML=`<div class="modal sm"><p>${msg}</p>${inp?`<input id="dv" placeholder="Ketik: ${inp}">`:''}<div class="row end"><button class="btn" id="dn">Batal</button><button class="btn d" id="dy">${ok}</button></div></div>`;const x=v=>{d.hidden=true;d.innerHTML='';r(v)};$('#dn').onclick=()=>x(false);$('#dy').onclick=()=>{if(inp&&$('#dv').value!==inp)return toast('Teks konfirmasi tidak cocok','bad');x(true)}})}
+const form=r=>Object.fromEntries([...r.querySelectorAll('[name]')].map(e=>[e.name,e.type==='checkbox'?e.checked:e.value.trim()]));
+const N=(v,l,pos)=>{const n=Number(String(v).replace(',','.'));if(v===''||!isFinite(n))throw new Error(l+' harus berupa angka valid');if(n<0)throw new Error(l+' tidak boleh negatif');if(pos&&n<=0)throw new Error(l+' harus lebih dari 0');return r3(n)};
+const U=new Map(),img=o=>{if(!o.photo)return FB;const k=o.id+'|'+(o.updatedAt||0);if(!U.has(k))U.set(k,URL.createObjectURL(o.photo));return U.get(k)};
+const th=o=>`<img class="th" src="${img(o)}" onerror="this.onerror=null;this.src=FB" alt="">`;
+const shrink=(f,m=640)=>new Promise((res,rej)=>{const i=new Image(),u=URL.createObjectURL(f);i.onload=()=>{const k=Math.min(1,m/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=Math.round(i.width*k);c.height=Math.round(i.height*k);c.getContext('2d').drawImage(i,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error('Gagal memproses foto')),'image/jpeg',.82)};i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('File bukan gambar yang valid'))};i.src=u});
+const status=p=>p.stock<=0?['Habis','bad']:p.stock<=p.minStock?['Stock rendah','warn']:['Aman','ok'];
+const badge=(t,k)=>`<span class="b ${k}">${esc(t)}</span>`;
+const tbl=(h,rows,empty='Belum ada data')=>rows.length?`<div class="tw"><table><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:`<div class="tw empty">${empty}</div>`;
+function chart(d){const mx=Math.max(1,...d.map(x=>x[1])),w=420/d.length;return `<svg viewBox="0 0 420 130" width="100%" role="img" aria-label="Grafik">${d.map((x,i)=>{const h=Math.round(x[1]/mx*88);return `<rect x="${i*w+8}" y="${100-h}" width="${w-16}" height="${h}" rx="4" fill="#8b929a" opacity=".8"><title>${esc(x[0])}: ${rp(x[1])}</title></rect><text x="${i*w+w/2}" y="118" text-anchor="middle" font-size="10" fill="#8b929a">${esc(x[0].slice(0,9))}</text>`}).join('')}</svg>`}
+const opts=(a,sel,all)=>(all?`<option value="">${all}</option>`:'')+a.map(x=>`<option value="${esc(x)}"${x===sel?' selected':''}>${esc(x)}</option>`).join('');
+const cats=()=>[...new Set(S.products.map(p=>p.category))].sort();
+// ---------- pages ----------
+const NAV=[['dashboard','Dashboard'],['produk','Produk / Stock'],['masuk','Barang Masuk'],['keluar','Barang Keluar'],['pengeluaran','Pengeluaran'],['alat','Alat'],['riwayat','Riwayat Aktivitas'],['pengaturan','Pengaturan']];
+const head=(t,s,btn='')=>`<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2>${t}</h2><p class="sub">${s}</p></div>${btn}</div>`;
+const PAGES={
+dashboard(){const P=S.products,low=P.filter(p=>p.stock>0&&p.stock<=p.minStock).length,out=P.filter(p=>p.stock<=0).length,c=(k,v)=>`<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+ const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');return[d.toLocaleDateString('id-ID',{weekday:'short'}),sum(S.expenses.filter(e=>e.date===k),e=>e.amount)]});
+ const last=ty=>S.tx.filter(x=>x.type===ty).sort((a,b)=>b.ts-a.ts).slice(0,5).map(x=>`<div class="log"><span>${esc(x.productName)}</span><span class="k" style="margin-left:auto">${x.qty} ${esc(x.unit)} · ${dd(x.date)}</span></div>`).join('')||'<div class="k">Belum ada</div>';
+ return head('Dashboard','Ringkasan kondisi inventory')+`<div class="grid">${c('Jenis produk',P.length)}${c('Total stock',r3(sum(P,p=>p.stock)))}${c('Stock rendah',`<span style="color:var(--warn)">${low}</span>`)}${c('Produk habis',`<span style="color:var(--bad)">${out}</span>`)}${c('Nilai inventory',rp(sum(P,p=>p.stock*p.buyPrice)))}${c('Total pengeluaran',rp(sum(S.expenses,e=>e.amount)))}</div>
+ <div class="g2"><div class="card"><div class="k">Barang masuk terbaru</div>${last('in')}</div><div class="card"><div class="k">Barang keluar terbaru</div>${last('out')}</div></div>
+ <div class="card"><div class="k">Pengeluaran 7 hari terakhir</div>${chart(days)}</div>`},
+produk(){const f=ST.f;return head('Produk / Stock',`${S.products.length} produk`,'<button class="btn p" data-a="add-p">+ Tambah produk</button>')+`<div class="row"><input data-f="q" placeholder="Cari produk…" value="${esc(f.q)}" style="min-width:200px"><select data-f="cat">${opts(cats(),f.cat,'Semua kategori')}</select><select data-f="st">${['Aman','Stock rendah','Habis'].map(x=>`<option${x===f.st?' selected':''}>${x}</option>`).join('').replace('<option','<option value=""> Semua status</option><option')}</select><select data-f="sort">${[['name','Nama A–Z'],['pa','Harga ↑'],['pd','Harga ↓'],['sa','Stock ↑'],['sd','Stock ↓']].map(([v,l])=>`<option value="${v}"${v===f.sort?' selected':''}>${l}</option>`).join('')}</select></div><div id="tb"></div>`},
+masuk:()=>movePage('in'),keluar:()=>movePage('out'),
+pengeluaran(){const ef=ST.ef;return head('Pengeluaran','Catat dan pantau pengeluaran','<button class="btn p" data-a="add-x">+ Tambah</button>')+`<div class="row"><label>Dari<input type="date" data-e="from" value="${ef.from}"></label><label>Sampai<input type="date" data-e="to" value="${ef.to}"></label><label>Kategori<select data-e="cat">${opts([...new Set(S.expenses.map(e=>e.category))],ef.cat,'Semua')}</select></label></div><div id="ex"></div>`},
+alat(){return head('Alat','Perlengkapan yang dimiliki','<button class="btn p" data-a="add-t">+ Tambah alat</button>')+tbl(['Foto','Nama','Kategori','Jml','Kondisi','Lokasi','Dibeli','Harga',''],S.tools.sort((a,b)=>a.name.localeCompare(b.name)).map(t=>[th(t),esc(t.name),esc(t.category),t.qty,badge(t.condition,t.condition==='Baik'?'ok':t.condition==='Perlu diperbaiki'?'warn':'bad'),esc(t.location||'-'),dd(t.purchaseDate),rp(t.price),`<button class="btn s" data-a="edit-t" data-id="${t.id}">Edit</button> <button class="btn s d" data-a="del-t" data-id="${t.id}">Hapus</button>`]),'Belum ada alat. Klik “Tambah alat”.')},
+riwayat(){const L=[...S.logs].sort((a,b)=>b.ts-a.ts).filter(l=>!ST.lf||l.type===ST.lf).slice(0,200);return head('Riwayat Aktivitas','200 aktivitas terbaru')+`<div class="row"><select data-l="1">${opts(['produk','stok','pengeluaran','alat','data'],ST.lf,'Semua jenis')}</select></div><div class="card">${L.map(l=>`<div class="log"><time>${dt(l.ts)}</time>${badge(l.type,'n')}<span>${esc(l.text)}</span></div>`).join('')||'<div class="empty">Belum ada aktivitas</div>'}</div>`},
+pengaturan(){return head('Pengaturan','Data tersimpan otomatis di browser ini (IndexedDB)')+`<div class="card" style="margin-bottom:12px"><div class="f2"><label>Minimum stock default<input id="sMin" type="number" min="0" value="${S.set.minStock}"></label><label>Mata uang<select id="sCur">${Object.keys(CUR).map(c=>`<option${c===S.set.currency?' selected':''}>${c}</option>`).join('')}</select></label></div><div class="row end"><button class="btn p" data-a="save-s">Simpan pengaturan</button></div></div>
+<div class="card" style="margin-bottom:12px"><h3 style="margin-top:0">Backup &amp; restore</h3><p class="sub">Export berkala sebagai cadangan. Import bisa Replace (timpa semua) atau Merge (tambah yang belum ada, berdasarkan ID).</p><div class="row"><button class="btn" data-a="exp-json">Export JSON</button><button class="btn" data-a="exp-csv">Export CSV produk</button><input type="file" id="impf" accept=".json,application/json" style="max-width:260px"></div></div>
+<div class="card"><h3 style="margin-top:0;color:var(--bad)">Zona bahaya</h3><button class="btn d" data-a="reset">Reset seluruh data</button></div>`}};
+function movePage(ty){const IN=ty==='in';ST.fid[ty]=ST.fid[ty]||uid();const P=[...S.products].sort((a,b)=>a.name.localeCompare(b.name));
+ const rows=S.tx.filter(x=>x.type===ty).sort((a,b)=>b.ts-a.ts).slice(0,50).map(x=>[dd(x.date),esc(x.productName),r3(x.qty)+' '+esc(x.unit),rp(x.price),esc(x.party||'-'),esc(x.note||'-')]);
+ return head(IN?'Barang Masuk':'Barang Keluar',IN?'Stock bertambah otomatis':'Stock berkurang otomatis; tidak boleh negatif')+`<div class="card" style="margin-bottom:16px"><div class="f2"><label class="w">Produk<select name="productId" id="mvp"><option value="">Pilih produk…</option>${P.map(p=>`<option value="${p.id}">${esc(p.name)} (${r3(p.stock)} ${esc(p.unit)})</option>`).join('')}</select></label><label>Jumlah<input name="qty" inputmode="decimal"></label><label>Harga ${IN?'beli':'jual'} / satuan<input name="price" inputmode="decimal" value="0"></label><label>Tanggal<input name="date" type="date" value="${today()}"></label><label>${IN?'Sumber / pemasok':'Tujuan / penerima'}<input name="party"></label><label class="w">Catatan<input name="note"></label>${IN?'<label class="ck w"><input type="checkbox" name="asExpense" checked> Catat juga sebagai pengeluaran</label>':''}</div><div class="row end"><button class="btn p" data-a="mv" data-id="${ty}">Catat ${IN?'barang masuk':'barang keluar'}</button></div></div>`+tbl(['Tanggal','Produk','Jumlah','Harga',IN?'Pemasok':'Penerima','Catatan'],rows,'Belum ada transaksi')}
+function drawProducts(){const f=ST.f,q=f.q.toLowerCase();let L=S.products.filter(p=>(!q||p.name.toLowerCase().includes(q))&&(!f.cat||p.category===f.cat)&&(!f.st||status(p)[0]===f.st));
+ const cmp={name:(a,b)=>a.name.localeCompare(b.name),pa:(a,b)=>a.sellPrice-b.sellPrice,pd:(a,b)=>b.sellPrice-a.sellPrice,sa:(a,b)=>a.stock-b.stock,sd:(a,b)=>b.stock-a.stock}[f.sort];L.sort(cmp);
+ const per=25,pages=Math.max(1,Math.ceil(L.length/per));f.page=Math.min(f.page,pages);const sl=L.slice((f.page-1)*per,f.page*per);
+ $('#tb').innerHTML=tbl(['Foto','Produk','Kategori','Harga jual','Stock','Status','Aksi'],sl.map(p=>{const s=status(p);return[th(p),esc(p.name),esc(p.category),rp(p.sellPrice),r3(p.stock)+' '+esc(p.unit),badge(...s),`<button class="btn s" data-a="view-p" data-id="${p.id}">Detail</button> <button class="btn s" data-a="edit-p" data-id="${p.id}">Edit</button> <button class="btn s d" data-a="del-p" data-id="${p.id}">Hapus</button>`]}),S.products.length?'Tidak ada produk yang cocok':'Belum ada produk. Klik “Tambah produk” untuk mulai.')+(L.length>per?`<div class="pg"><button class="btn s" data-a="pg" data-id="-1" ${f.page<=1?'disabled':''}>←</button> ${f.page} / ${pages} <button class="btn s" data-a="pg" data-id="1" ${f.page>=pages?'disabled':''}>→</button></div>`:'')}
+function drawExp(){const e=ST.ef,m=today().slice(0,7);const L=S.expenses.filter(x=>(!e.from||x.date>=e.from)&&(!e.to||x.date<=e.to)&&(!e.cat||x.category===e.cat)).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt);
+ const by={};L.forEach(x=>by[x.category]=(by[x.category]||0)+x.amount);const cd=Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,6);
+ const c=(k,v)=>`<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+ $('#ex').innerHTML=`<div class="grid">${c('Total pengeluaran',rp(sum(S.expenses,x=>x.amount)))}${c('Hari ini',rp(sum(S.expenses.filter(x=>x.date===today()),x=>x.amount)))}${c('Bulan ini',rp(sum(S.expenses.filter(x=>x.date.startsWith(m)),x=>x.amount)))}${c('Hasil filter',rp(sum(L,x=>x.amount)))}</div>`+(cd.length?`<div class="card" style="margin-bottom:16px"><div class="k">Per kategori (sesuai filter)</div>${chart(cd)}</div>`:'')+tbl(['Tanggal','Nama','Kategori','Nominal','Produk','Keterangan',''],L.slice(0,200).map(x=>{const p=S.products.find(p=>p.id===x.productId);return[dd(x.date),esc(x.name),esc(x.category),rp(x.amount),esc(p?p.name:'-'),esc(x.note||'-'),`<button class="btn s d" data-a="del-x" data-id="${x.id}">Hapus</button>`]}),'Belum ada pengeluaran')}
+const AFTER={produk:drawProducts,pengeluaran:drawExp};
+function render(){const pg=(location.hash.slice(2)||'dashboard');const k=PAGES[pg]?pg:'dashboard';$('#side').innerHTML='<h1>📦 Stokku</h1>'+NAV.map(([id,l])=>`<a href="#/${id}" class="${id===k?'on':''}">${l}</a>`).join('');$('#pg').innerHTML=PAGES[k]();AFTER[k]&&AFTER[k]();}
+const refresh=async()=>{await load();render()};
+// ---------- produk ----------
+const pfield=(l,n,v='',x='')=>`<label>${l}<input name="${n}" value="${esc(v)}" ${x}></label>`;
+function photoBox(o){const M=ST.m;return `<div class="w"><img class="big" id="prev" src="${M.photo?URL.createObjectURL(M.photo):FB}" onerror="this.onerror=null;this.src=FB" alt=""><div class="row" style="margin:8px 0 0"><input type="file" id="ph" accept="image/*" style="max-width:240px"><button class="btn s" data-a="rm-photo">Hapus foto</button></div></div>`}
+function openProduct(id){const p=id?S.products.find(x=>x.id===id):null;ST.m={id:p?p.id:uid(),edit:!!p,photo:p?p.photo:null,changed:false};
+ modal(`<h3>${p?'Edit':'Tambah'} produk</h3><div class="f2">${photoBox()}${pfield('Nama produk *','name',p?.name,'class="w"').replace('<label>','<label class="w">')}<label>Kategori<input name="category" list="cl" value="${esc(p?.category||'')}" placeholder="Umum"><datalist id="cl">${cats().map(c=>`<option value="${esc(c)}">`).join('')}</datalist></label>${pfield('Satuan','unit',p?.unit||'pcs')}${pfield('Harga beli','buyPrice',p?.buyPrice??0,'inputmode="decimal"')}${pfield('Harga jual','sellPrice',p?.sellPrice??0,'inputmode="decimal"')}${pfield(p?'Stock (ubah = penyesuaian)':'Stock awal','stock',p?.stock??0,'inputmode="decimal"')}${pfield('Minimum stock','minStock',p?.minStock??S.set.minStock,'inputmode="decimal"')}<label class="w">Deskripsi / catatan<textarea name="description" rows="2">${esc(p?.description||'')}</textarea></label></div><div class="row end"><button class="btn" data-a="close">Batal</button><button class="btn p" data-a="save-p">Simpan</button></div>`)}
+async function saveProduct(){const f=form($('#ov')),M=ST.m;if(!f.name)throw new Error('Nama produk wajib diisi');
+ const o={name:f.name,category:f.category||'Umum',buyPrice:N(f.buyPrice,'Harga beli'),sellPrice:N(f.sellPrice,'Harga jual'),stock:N(f.stock,'Stock'),unit:f.unit||'pcs',minStock:N(f.minStock,'Minimum stock'),description:f.description};
+ if(!M.edit&&S.products.some(p=>p.name.toLowerCase()===o.name.toLowerCase()&&p.category.toLowerCase()===o.category.toLowerCase())&&!await ask('Sudah ada produk dengan nama dan kategori yang sama. Tetap tambahkan?','Tetap tambah'))return;
+ const now=Date.now();
+ const r=await run(['products','tx','logs'],'readwrite',async t=>{const P=t.objectStore('products'),cur=await req(P.get(M.id));
+  if(!M.edit){if(cur)return'dup';P.add({...o,id:M.id,photo:M.photo||null,createdAt:now,updatedAt:now});lg(t,'produk',`Produk ${o.name} ditambahkan`);if(o.stock>0){t.objectStore('tx').add({id:'init-'+M.id,type:'in',productId:M.id,productName:o.name,unit:o.unit,qty:o.stock,price:o.buyPrice,date:today(),party:'',note:'Stok awal',ts:now});lg(t,'stok',`Stock ${o.name} bertambah ${o.stock} (stok awal)`)}return'ok'}
+  if(!cur)throw new Error('Produk sudah tidak ada');const d=r3(o.stock-cur.stock);
+  if(d){t.objectStore('tx').add({id:uid(),type:'adj',productId:cur.id,productName:o.name,unit:o.unit,qty:d,price:0,date:today(),party:'',note:'Penyesuaian manual',ts:now});lg(t,'stok',`Stock ${o.name} disesuaikan ${d>0?'+':''}${d}`)}
+  if(cur.buyPrice!==o.buyPrice||cur.sellPrice!==o.sellPrice)lg(t,'produk',`Harga ${o.name} diubah`);
+  lg(t,'produk',`Produk ${o.name} diperbarui`);P.put({...cur,...o,photo:M.changed?(M.photo||null):cur.photo,updatedAt:now});return'ok'});
+ closeM();await refresh();toast(r==='dup'?'Produk ini sudah tersimpan (tidak digandakan)':M.edit?'Produk berhasil diperbarui':'Produk berhasil ditambahkan',r==='dup'?'warn':'')}
+function viewProduct(id){const p=S.products.find(x=>x.id===id);if(!p)return;const s=status(p),h=S.tx.filter(x=>x.productId===id).sort((a,b)=>b.ts-a.ts).slice(0,8);
+ modal(`<h3>${esc(p.name)} ${badge(...s)}</h3><img class="big" src="${img(p)}" onerror="this.onerror=null;this.src=FB" alt=""><div class="f2" style="margin-top:12px">${[['Kategori',esc(p.category)],['Stock',r3(p.stock)+' '+esc(p.unit)],['Harga beli',rp(p.buyPrice)],['Harga jual',rp(p.sellPrice)],['Minimum stock',p.minStock],['Nilai stock',rp(p.stock*p.buyPrice)],['Ditambahkan',dt(p.createdAt)],['Diperbarui',dt(p.updatedAt)]].map(([k,v])=>`<div><div class="k">${k}</div>${v}</div>`).join('')}<div class="w"><div class="k">Deskripsi</div>${esc(p.description||'-')}</div><div class="w"><div class="k">ID</div><code style="font-size:11px">${p.id}</code></div></div><div class="k" style="margin-top:12px">Transaksi terakhir</div>${h.map(x=>`<div class="log"><time>${dd(x.date)}</time><span>${x.type==='in'?'Masuk':x.type==='out'?'Keluar':'Penyesuaian'} ${x.qty>0&&x.type==='adj'?'+':''}${r3(x.qty)} ${esc(x.unit)}</span></div>`).join('')||'<div class="k">Belum ada</div>'}<div class="row end"><button class="btn" data-a="close">Tutup</button></div>`)}
+// ---------- transaksi stok ----------
+async function saveMove(ty){const f=form($('#pg')),IN=ty==='in';if(!f.productId)throw new Error('Pilih produk terlebih dahulu');
+ const qty=N(f.qty,'Jumlah',true),price=N(f.price,'Harga'),id=ST.fid[ty];if(!f.date)throw new Error('Tanggal wajib diisi');
+ const r=await run(['products','tx','expenses','logs'],'readwrite',async t=>{
+  if(await req(t.objectStore('tx').get(id)))return'dup';
+  const P=t.objectStore('products'),p=await req(P.get(f.productId));if(!p)throw new Error('Produk tidak ditemukan');
+  const nv=r3(p.stock+(IN?qty:-qty));if(nv<0)throw new Error(`Stock tidak mencukupi (tersedia ${r3(p.stock)} ${p.unit})`);
+  p.stock=nv;p.updatedAt=Date.now();P.put(p);
+  t.objectStore('tx').add({id,type:ty,productId:p.id,productName:p.name,unit:p.unit,qty,price,date:f.date,party:f.party,note:f.note,ts:Date.now()});
+  if(IN&&f.asExpense&&price>0){const a=r3(qty*price);t.objectStore('expenses').add({id:'exp-'+id,name:'Pembelian: '+p.name,category:'Pembelian stok',amount:a,date:f.date,note:f.party,productId:p.id,createdAt:Date.now()});lg(t,'pengeluaran',`Pengeluaran ${rp(a)} ditambahkan (pembelian ${p.name})`)}
+  lg(t,'stok',IN?`Stock ${p.name} bertambah ${qty}`:`${p.name} keluar sebanyak ${qty}`);return'ok'});
+ ST.fid[ty]=null;await refresh();toast(r==='dup'?'Transaksi ini sudah tercatat (tidak digandakan)':'Stock berhasil diperbarui',r==='dup'?'warn':'')}
+// ---------- pengeluaran & alat ----------
+async function saveRec(store,rec,edit,text,type){const r=await run([store,'logs'],'readwrite',async t=>{const O=t.objectStore(store),c=await req(O.get(rec.id));if(c&&!edit)return'dup';O.put(edit&&c?{...c,...rec}:rec);lg(t,type,text);return'ok'});closeM();await refresh();toast(r==='dup'?'Data sudah tersimpan (tidak digandakan)':'Data berhasil disimpan',r==='dup'?'warn':'')}
+const delRec=async(store,id,text,type)=>{await run([store,'logs'],'readwrite',async t=>{t.objectStore(store).delete(id);lg(t,type,text)});await refresh();toast('Data berhasil dihapus')};
+function openExpense(){ST.m={id:uid()};modal(`<h3>Tambah pengeluaran</h3><div class="f2">${pfield('Nama pengeluaran *','name')}<label>Kategori<input name="category" placeholder="Operasional"></label>${pfield('Nominal','amount','','inputmode="decimal"')}<label>Tanggal<input type="date" name="date" value="${today()}"></label><label class="w">Produk terkait (opsional)<select name="productId"><option value="">—</option>${S.products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></label><label class="w">Keterangan<input name="note"></label></div><div class="row end"><button class="btn" data-a="close">Batal</button><button class="btn p" data-a="save-x">Simpan</button></div>`)}
+async function saveExpense(){const f=form($('#ov'));if(!f.name)throw new Error('Nama pengeluaran wajib diisi');if(!f.date)throw new Error('Tanggal wajib diisi');const a=N(f.amount,'Nominal',true);await saveRec('expenses',{id:ST.m.id,name:f.name,category:f.category||'Lainnya',amount:a,date:f.date,note:f.note,productId:f.productId||null,createdAt:Date.now()},false,`Pengeluaran ${rp(a)} ditambahkan (${f.name})`,'pengeluaran')}
+const CONDS=['Baik','Perlu diperbaiki','Rusak','Hilang'];
+function openTool(id){const t=id?S.tools.find(x=>x.id===id):null;ST.m={id:t?t.id:uid(),edit:!!t,photo:t?t.photo:null,changed:false};
+ modal(`<h3>${t?'Edit':'Tambah'} alat</h3><div class="f2">${photoBox()}${pfield('Nama alat *','name',t?.name)}${pfield('Kategori','category',t?.category||'')}${pfield('Jumlah','qty',t?.qty??1,'inputmode="decimal"')}<label>Kondisi<select name="condition">${opts(CONDS,t?.condition||'Baik')}</select></label>${pfield('Lokasi penyimpanan','location',t?.location||'')}<label>Tanggal pembelian<input type="date" name="purchaseDate" value="${t?.purchaseDate||''}"></label>${pfield('Harga','price',t?.price??0,'inputmode="decimal"')}<label class="w">Catatan<textarea name="notes" rows="2">${esc(t?.notes||'')}</textarea></label></div><div class="row end"><button class="btn" data-a="close">Batal</button><button class="btn p" data-a="save-t">Simpan</button></div>`)}
+async function saveTool(){const f=form($('#ov')),M=ST.m;if(!f.name)throw new Error('Nama alat wajib diisi');const now=Date.now();
+ const rec={id:M.id,name:f.name,category:f.category||'Umum',qty:N(f.qty,'Jumlah'),condition:f.condition,location:f.location,purchaseDate:f.purchaseDate,price:N(f.price,'Harga'),notes:f.notes,updatedAt:now};if(!M.edit){rec.photo=M.photo||null;rec.createdAt=now}else if(M.changed)rec.photo=M.photo||null;
+ await saveRec('tools',rec,M.edit,`Alat ${f.name} ${M.edit?'diperbarui':'ditambahkan'}`,'alat')}
+// ---------- backup ----------
+const save=async(filename,data)=>{if(window.claude){const d=await claude.use('downloads').catch(()=>null);if(!d)return toast('Penyimpanan file tidak tersedia di tampilan ini','bad');try{await d.save({filename,data});toast('File siap disimpan')}catch(e){if(e&&e.code!=='declined')toast('Gagal menyimpan file: '+(e.message||e.code),'bad')}return}
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:filename.endsWith('.csv')?'text/csv':'application/json'}));a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('File diunduh')};
+const b2d=b=>b?new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.onerror=()=>r(null);f.readAsDataURL(b)}):Promise.resolve(null);
+function d2b(s){const m=/^data:([^;,]+);base64,(.*)$/.exec(s);if(!m)return null;const b=atob(m[2]),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Blob([a],{type:m[1]})}
+async function exportJSON(){const data={};for(const k of DATA)data[k]=S[k];data.products=await Promise.all(S.products.map(async p=>({...p,photo:await b2d(p.photo)})));data.tools=await Promise.all(S.tools.map(async p=>({...p,photo:await b2d(p.photo)})));await save(`stokku-backup-${today()}.json`,JSON.stringify({app:'stokku',schema:SCHEMA,exportedAt:new Date().toISOString(),data}))}
+const safe=c=>{c=String(c??'');return/^[=+\-@]/.test(c)?"'"+c:c};
+const exportCSV=()=>save(`stokku-produk-${today()}.csv`,'\ufeff'+[['ID','Nama','Kategori','Harga beli','Harga jual','Stock','Satuan','Minimum stock','Deskripsi'],...S.products.map(p=>[p.id,p.name,p.category,p.buyPrice,p.sellPrice,p.stock,p.unit,p.minStock,p.description])].map(r=>r.map(c=>`"${safe(c).replace(/"/g,'""')}"`).join(',')).join('\n'));
+function validate(j){if(!j||typeof j!=='object'||j.app!=='stokku'||!j.data||typeof j.data!=='object')throw new Error('Bukan file backup Stokku yang valid');if(!(j.schema<=SCHEMA))throw new Error('Versi backup lebih baru dari aplikasi ini');const o={};
+ for(const k of DATA){const a=j.data[k]??[];if(!Array.isArray(a))throw new Error('Data '+k+' rusak');a.forEach((r,i)=>{if(!r||typeof r!=='object'||typeof r.id!=='string'||!r.id)throw new Error(`${k} #${i+1}: ID tidak valid`)});if(new Set(a.map(r=>r.id)).size!==a.length)throw new Error('Ada ID ganda di dalam file ('+k+')');o[k]=a}
+ o.products.forEach((p,i)=>{if(typeof p.name!=='string'||!p.name||![p.stock,p.buyPrice,p.sellPrice,p.minStock].every(v=>typeof v==='number'&&isFinite(v)&&v>=0))throw new Error(`Produk #${i+1} tidak valid`)});
+ o.tools.forEach((p,i)=>{if(typeof p.name!=='string'||!p.name)throw new Error(`Alat #${i+1} tidak valid`)});return o}
+async function applyImport(mode){const d=ST.imp;for(const k of['products','tools'])d[k].forEach(r=>{r.photo=typeof r.photo==='string'?d2b(r.photo):null});let add=0,skip=0;
+ await run(DATA,'readwrite',async t=>{for(const k of DATA){const O=t.objectStore(k);if(mode==='replace'){O.clear();d[k].forEach(r=>{O.put(r);add++})}else for(const r of d[k]){if(await req(O.getKey(r.id))!==undefined)skip++;else{O.add(r);add++}}}});
+ await run(['logs'],'readwrite',t=>lg(t,'data',`Import data (${mode}): ${add} ditambah, ${skip} dilewati`));ST.imp=null;closeM();await refresh();toast(`Import selesai: ${add} ditambah, ${skip} dilewati (sudah ada)`)}
+// ---------- events ----------
+const ACT={
+burger:()=>$('#side').classList.toggle('open'),close:closeM,
+'add-p':()=>openProduct(),'edit-p':id=>openProduct(id),'view-p':viewProduct,'save-p':()=>once(saveProduct),
+'del-p':id=>once(async()=>{const p=S.products.find(x=>x.id===id);if(p&&await ask(`Hapus produk “${esc(p.name)}”? Riwayat transaksinya tetap tersimpan.`))await delRec('products',id,`Produk ${p.name} dihapus`,'produk')}),
+'rm-photo':()=>{ST.m.photo=null;ST.m.changed=true;$('#prev').src=FB;const i=$('#ph');if(i)i.value=''},
+pg:id=>{ST.f.page+=+id;drawProducts()},mv:ty=>once(()=>saveMove(ty)),
+'add-x':openExpense,'save-x':()=>once(saveExpense),'del-x':id=>once(async()=>{const x=S.expenses.find(e=>e.id===id);if(x&&await ask(`Hapus pengeluaran “${esc(x.name)}”?`))await delRec('expenses',id,`Pengeluaran ${rp(x.amount)} dihapus (${x.name})`,'pengeluaran')}),
+'add-t':()=>openTool(),'edit-t':id=>openTool(id),'save-t':()=>once(saveTool),'del-t':id=>once(async()=>{const x=S.tools.find(e=>e.id===id);if(x&&await ask(`Hapus alat “${esc(x.name)}”?`))await delRec('tools',id,`Alat ${x.name} dihapus`,'alat')}),
+'save-s':()=>once(async()=>{const m=N($('#sMin').value,'Minimum stock');S.set={...S.set,minStock:m,currency:$('#sCur').value};await run(['settings'],'readwrite',t=>t.objectStore('settings').put(S.set));render();toast('Pengaturan disimpan')}),
+'exp-json':()=>once(exportJSON),'exp-csv':()=>once(exportCSV),
+'imp-replace':()=>once(async()=>{if(await ask('Replace akan MENGHAPUS semua data saat ini dan menggantinya dengan isi file. Lanjutkan?','Ya, replace'))await applyImport('replace')}),'imp-merge':()=>once(()=>applyImport('merge')),
+reset:()=>once(async()=>{if(!await ask('Hapus SELURUH data (produk, transaksi, pengeluaran, alat, riwayat)? Sebaiknya export dulu.','Lanjut'))return;if(!await ask('Ini permanen dan tidak bisa dibatalkan.','Saya mengerti, lanjut','HAPUS SEMUA'))return;await run(DATA,'readwrite',t=>DATA.forEach(k=>t.objectStore(k).clear()));await refresh();toast('Semua data telah dihapus')})};
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;if(b.dataset.a!=='burger')$('#side').classList.remove('open');ACT[b.dataset.a]?.(b.dataset.id,b)});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset.f){ST.f[t.dataset.f]=t.value;ST.f.page=1;drawProducts()}else if(t.dataset.e){ST.ef[t.dataset.e]=t.value;drawExp()}});
+document.addEventListener('change',async e=>{const t=e.target;
+ if(t.dataset.l){ST.lf=t.value;render()}
+ else if(t.id==='mvp'){const p=S.products.find(x=>x.id===t.value),pr=$('[name=price]');if(p&&pr)pr.value=location.hash.includes('masuk')?p.buyPrice:p.sellPrice}
+ else if(t.id==='ph'&&t.files[0]){try{ST.m.photo=await shrink(t.files[0]);ST.m.changed=true;$('#prev').src=URL.createObjectURL(ST.m.photo)}catch(x){toast(x.message,'bad');t.value=''}}
+ else if(t.id==='impf'&&t.files[0]){try{ST.imp=validate(JSON.parse(await t.files[0].text()));const c=k=>ST.imp[k].length;modal(`<h3>Import data</h3><p>File valid: ${c('products')} produk, ${c('tx')} transaksi, ${c('expenses')} pengeluaran, ${c('tools')} alat, ${c('logs')} log.</p><p class="k"><b>Merge</b>: hanya menambah data yang ID-nya belum ada (tanpa duplikat). <b>Replace</b>: mengganti semua data saat ini.</p><div class="row end"><button class="btn" data-a="close">Batal</button><button class="btn d" data-a="imp-replace">Replace</button><button class="btn p" data-a="imp-merge">Merge</button></div>`)}catch(x){toast(x instanceof SyntaxError?'File bukan JSON yang valid':x.message,'bad')}t.value=''}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('#dlg').hidden)$('#dn')?.click();else closeM()}else if(e.key==='Enter'&&e.target.matches('#ov input')){$('#ov [data-a^=save]')?.click()}});
+window.addEventListener('hashchange',render);
+(async()=>{try{db=await openSafe();db.onversionchange=()=>db.close();await load();if(!S.set.created){S.set.created=Date.now();await run(['settings'],'readwrite',t=>t.objectStore('settings').put(S.set))}navigator.storage?.persist?.().catch(()=>{});render()}catch(e){$('#pg').innerHTML=`<div class="card"><h2>Database gagal dibuka</h2><p class="sub">${esc(e.message||e)}. Pastikan browser mengizinkan penyimpanan lokal (bukan mode privat), lalu muat ulang.</p></div>`}})();
+</script></body></html>
